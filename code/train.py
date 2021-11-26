@@ -48,8 +48,11 @@ def train(
     train_dl, val_dl, test_dl = create_dataloader(data_config)
 
     # Create optimizer, scheduler, criterion
-    optimizer = torch.optim.SGD(
-        model_instance.model.parameters(), lr=data_config["INIT_LR"], momentum=0.9
+    # optimizer = torch.optim.SGD(
+    #     model_instance.model.parameters(), lr=data_config["INIT_LR"], momentum=0.9
+    # )
+    optimizer = torch.optim.Adam(
+        model_instance.model.parameters(), lr=data_config["INIT_LR"]
     )
     scheduler = torch.optim.lr_scheduler.OneCycleLR(
         optimizer=optimizer,

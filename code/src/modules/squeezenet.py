@@ -1,9 +1,13 @@
-import math
+from typing import Any
 
 import torch
 import torch.nn as nn
+import torch.nn.init as init
 
 from src.modules.base_generator import GeneratorAbstract
+from src.utils.torch_utils import Activation
+
+from abc import ABC, abstractmethod
 
 class Fire(nn.Module):
     def __init__(self, inplanes: int, squeeze_planes: int, expand1x1_planes: int, expand3x3_planes: int) -> None:
@@ -22,46 +26,28 @@ class Fire(nn.Module):
             [self.expand1x1_activation(self.expand1x1(x)), self.expand3x3_activation(self.expand3x3(x))], 1
         )
 
-class FireGenerator(GeneratorAbstract):
-    """Fire block generator."""
 
+class FireGenerator(GeneratorAbstract):
+    
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
     @property
     def out_channel(self) -> int:
-        """Get out channel size."""
-        return int(self.args[1]+self.args[2])
+        return int(self.args[1] + self.args[2])
 
     @property
     def base_module(self) -> nn.Module:
-        """Returns module class from src.common_modules based on the class name."""
         return getattr(__import__("src.modules", fromlist=[""]), self.name)
 
     def __call__(self, repeat: int = 1):
-        """call method.
+        args = [self.in_channel, *self.args]
 
-        Args: squeeze_planes: int, expand1x1_planes: int, expand3x3_planes: int
-        """
-        module = []
-        sq,ex1,ex3 = self.args  # c is equivalent as self.out_channel
-        inp = self.in_channel
-        if repeat>1:
+        if repeat > 1:
+            module = []
             for i in range(repeat):
-                module.append(
-                    self.base_module(
-                        in_planes=inp,
-                        squeeze_planes=sq,
-                        expand1x1_planes=ex1,
-                        expand3x3_planes=ex3,
-                    )
-                )
-                inp = self.out_channel
+                module.append(self.base_module(*args))
+                args[0] = self.out_channel
         else:
-            module=self.base_module(
-                inplanes=inp,
-                squeeze_planes=sq,
-                expand1x1_planes=ex1,
-                expand3x3_planes=ex3,
-            )
+            module = self.base_module(*args)
         return self._get_module(module)

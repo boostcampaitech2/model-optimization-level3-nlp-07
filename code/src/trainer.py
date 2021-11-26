@@ -7,7 +7,7 @@
 import os
 import shutil
 from typing import Optional, Tuple, Union
-import thop
+
 import numpy as np
 import torch
 import torch.nn as nn
@@ -172,7 +172,7 @@ class TorchTrainer:
                 )
             pbar.close()
 
-            _, test_f1, test_acc,_ = self.test(
+            _, test_f1, test_acc = self.test(
                 model=self.model, test_dataloader=val_dataloader
             )
             if best_test_f1 > test_f1:
@@ -244,8 +244,7 @@ class TorchTrainer:
         f1 = f1_score(
             y_true=gt, y_pred=preds, labels=label_list, average="macro", zero_division=0
         )
-        flops, _ = thop.profile(model, inputs=(torch.randn(1,3, 224,224).to(self.device),), verbose=False)
-        return loss, f1, accuracy, flops
+        return loss, f1, accuracy
 
 
 def count_model_params(
