@@ -113,12 +113,14 @@ if __name__ == "__main__":
     data_config["DATA_PATH"] = os.environ.get("SM_CHANNEL_TRAIN", data_config["DATA_PATH"])
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    log_dir = os.environ.get("SM_MODEL_DIR", os.path.join("exp", 'latest'))
-
-    if os.path.exists(log_dir): 
-        modified = datetime.fromtimestamp(os.path.getmtime(log_dir + '/best.pt'))
-        new_log_dir = os.path.dirname(log_dir) + '/' + modified.strftime("%Y-%m-%d_%H-%M-%S")
-        os.rename(log_dir, new_log_dir)
+    log_dir = os.environ.get("SM_MODEL_DIR", os.path.join("fire", 'latest'))
+    try:
+        if os.path.exists(log_dir): 
+            modified = datetime.fromtimestamp(os.path.getmtime(log_dir + '/best.pt'))
+            new_log_dir = os.path.dirname(log_dir) + '/' + modified.strftime("%Y-%m-%d_%H-%M-%S")
+            os.rename(log_dir, new_log_dir)
+    except:
+        pass
 
     os.makedirs(log_dir, exist_ok=True)
 
