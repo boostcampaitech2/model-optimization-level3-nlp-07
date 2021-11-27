@@ -48,18 +48,19 @@ def train(
     train_dl, val_dl, test_dl = create_dataloader(data_config)
 
     # Create optimizer, scheduler, criterion
-    # optimizer = torch.optim.SGD(
-    #     model_instance.model.parameters(), lr=data_config["INIT_LR"], momentum=0.9
-    # )
-    optimizer = torch.optim.Adam(
-        model_instance.model.parameters(), lr=data_config["INIT_LR"]
+    optimizer = torch.optim.SGD(
+        model_instance.model.parameters(), lr=data_config["INIT_LR"], momentum=0.9
     )
+    # optimizer = torch.optim.Adam(
+    #     model_instance.model.parameters(), lr=data_config["INIT_LR"]
+    # )
     scheduler = torch.optim.lr_scheduler.OneCycleLR(
         optimizer=optimizer,
         max_lr=data_config["INIT_LR"],
         steps_per_epoch=len(train_dl),
         epochs=data_config["EPOCHS"],
         pct_start=0.05,
+        # verbose=True
     )
     criterion = CustomCriterion(
         samples_per_cls=get_label_counts(data_config["DATA_PATH"])

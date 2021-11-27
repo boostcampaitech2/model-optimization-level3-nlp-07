@@ -14,17 +14,25 @@ from typing import Any, Dict, List, Tuple
 from optuna.pruners import HyperbandPruner
 from subprocess import _args_from_interpreter_flags
 import argparse
+import pandas as pd
+import json
+import os
+import sys
+import logging
 
 # EPOCH = 100
 EPOCH = 10
+N_TRIALS = 5
 # DATA_PATH = "/opt/ml/input/data"  # type your data path here that contains test, train and val directories
 DATA_PATH = "/opt/ml/data/"
-RESULT_MODEL_PATH = "./result_model.pt" # result model will be saved in this path
+SAVE_PATH = "./tune_save"
+if not os.path.exists(SAVE_PATH):
+    os.mkdir(SAVE_PATH)
+RESULT_MODEL_PATH = os.path.join(SAVE_PATH, "/result_model.pt") # result model will be saved in this path
 
 
 def search_hyperparam(trial: optuna.trial.Trial) -> Dict[str, Any]:
     """Search hyperparam from user-specified search space."""
-    # epochs = trial.suggest_int("epochs", low=50, high=50, step=50)
     epochs = trial.suggest_int("epochs", low=30, high=30, step=30)
     img_size = trial.suggest_categorical("img_size", [96, 112, 168, 224])
     n_select = trial.suggest_int("n_select", low=0, high=6, step=2)
@@ -415,6 +423,11 @@ def objective(trial: optuna.trial.Trial, device) -> Tuple[float, int, float]:
         "width_multiple", [0.25, 0.5, 0.75, 1.0]
     )
     model_config["backbone"], module_info = search_model(trial)
+    try:
+        with open("./module_info.json", "a") as f:
+            json.dump(module_info, f)
+    except:
+        pass
     hyperparams = search_hyperparam(trial)
 
     model = Model(model_config, verbose=True)
@@ -446,18 +459,19 @@ def objective(trial: optuna.trial.Trial, device) -> Tuple[float, int, float]:
     criterion = nn.CrossEntropyLoss()
     optimizer = torch.optim.SGD(model.parameters(), lr=0.1, momentum=0.9)
     # optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
-    # scheduler = torch.optim.lr_scheduler.OneCycleLR(
-    #     optimizer,
-    #     max_lr=0.1,
-    #     steps_per_epoch=len(train_loader),
-    #     epochs=hyperparams["EPOCHS"],
-    #     pct_start=0.1,
-    # )
-    scheduler = torch.optim.lr_scheduler.LamdaLR(
-        optimizer=optimizer,
-        lr_lambda=lambda epoch: 0.8 ** epoch,
+    scheduler = torch.optim.lr_scheduler.OneCycleLR(
+        optimizer,
+        max_lr=0.1,
+        steps_per_epoch=len(train_loader),
+        epochs=hyperparams["EPOCHS"],
+        pct_start=0.1,
         verbose=True
     )
+    # scheduler = torch.optim.lr_scheduler.LamdaLR(
+    #     optimizer=optimizer,
+    #     lr_lambda=lambda epoch: 0.8 ** epoch,
+    #     verbose=True
+    # )
 
     trainer = TorchTrainer(
         model,
@@ -495,6 +509,11 @@ def get_best_trial_with_condition(optuna_study: optuna.study.Study) -> Dict[str,
     # threshold = 0.7
     minimum_cond = df.acc_percent >= threshold
 
+    try:
+        df.to_csv("./exp.csv", index=False)
+    except:
+        pass
+
     if minimum_cond.any():
         df_min_cond = df.loc[minimum_cond]
         ## get the best trial idx with lowest parameter numbers
@@ -530,7 +549,7 @@ def tune(gpu_id, storage: str = None):
         load_if_exists=True,
     )
     # study.optimize(lambda trial: objective(trial, device), n_trials=500)
-    study.optimize(lambda trial: objective(trial, device), n_trials=5)
+    study.optimize(lambda trial: objective(trial, device), n_trials=N_TRIALS)
 
     pruned_trials = [
         t for t in study.trials if t.state == optuna.trial.TrialState.PRUNED
