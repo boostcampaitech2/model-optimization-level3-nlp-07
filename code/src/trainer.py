@@ -7,7 +7,7 @@
 import os
 import shutil
 from typing import Optional, Tuple, Union
-import thop
+
 import numpy as np
 import torch
 import torch.nn as nn
@@ -172,13 +172,24 @@ class TorchTrainer:
                 )
             pbar.close()
 
-            _, test_f1, test_acc= self.test(
+            _, test_f1, test_acc = self.test(
                 model=self.model, test_dataloader=val_dataloader
             )
+
+            if epoch == 0 and os.path.exists(self.model_path):
+                try:
+                    base_model = torch.load(self.model_path.split("result_model")[0])
+                    _, best_test_f1, best_test_acc = self.test(
+                        model=base_model, test_dataloader=val_dataloader
+                    )    
+                except:
+                    pass
+
             if best_test_f1 > test_f1:
                 continue
             best_test_acc = test_acc
             best_test_f1 = test_f1
+            
             print(f"Model saved. Current best test f1: {best_test_f1:.3f}")
             save_model(
                 model=self.model,
@@ -244,7 +255,6 @@ class TorchTrainer:
         f1 = f1_score(
             y_true=gt, y_pred=preds, labels=label_list, average="macro", zero_division=0
         )
-        
         return loss, f1, accuracy
 
 
