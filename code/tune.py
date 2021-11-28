@@ -25,10 +25,10 @@ EPOCH = 10
 N_TRIALS = 10
 # DATA_PATH = "/opt/ml/input/data"  # type your data path here that contains test, train and val directories
 DATA_PATH = "/opt/ml/data/"
-SAVE_PATH = "./exp/latest/"
-if not os.path.exists(SAVE_PATH):
-    os.mkdir(SAVE_PATH)
-RESULT_MODEL_PATH = os.path.join(SAVE_PATH, "/best.pt") # result model will be saved in this path
+# SAVE_PATH = "./exp/latest/"
+# if not os.path.exists(SAVE_PATH):
+#     os.mkdir(SAVE_PATH)
+RESULT_MODEL_PATH = "./best.pt" # result model will be saved in this path
 
 
 def search_hyperparam(trial: optuna.trial.Trial) -> Dict[str, Any]:
@@ -453,8 +453,8 @@ def objective(trial: optuna.trial.Trial, device) -> Tuple[float, int, float]:
         device,
     )
     try:
-        with open(os.path.join(SAVE_PATH, "data.yaml"), "w") as f:
-            yaml.dump(data_config, f, "data.yaml")
+        with open("./data.yaml", "w") as f:
+            yaml.dump(data_config, f, "./data.yaml")
     except:
         pass
 
