@@ -19,6 +19,7 @@ import json
 import os
 import sys
 import logging
+import yaml
 
 # EPOCH = 100
 EPOCH = 10
@@ -424,8 +425,8 @@ def objective(trial: optuna.trial.Trial, device) -> Tuple[float, int, float]:
     )
     model_config["backbone"], module_info = search_model(trial)
     try:
-        with open("./module_info.json", "a") as f:
-            json.dump(module_info, f)
+        with open("./model.yml", "w") as f:
+            yaml.dump(model_config, f, default_flow_style=False)
     except:
         pass
     hyperparams = search_hyperparam(trial)
@@ -464,8 +465,7 @@ def objective(trial: optuna.trial.Trial, device) -> Tuple[float, int, float]:
         max_lr=0.1,
         steps_per_epoch=len(train_loader),
         epochs=hyperparams["EPOCHS"],
-        pct_start=0.1,
-        verbose=True
+        pct_start=0.05,
     )
     # scheduler = torch.optim.lr_scheduler.LamdaLR(
     #     optimizer=optimizer,
@@ -505,7 +505,7 @@ def get_best_trial_with_condition(optuna_study: optuna.study.Study) -> Dict[str,
         }
     )
     ## minimum condition : accuracy >= threshold
-    threshold = 0.5
+    threshold = 0.6
     # threshold = 0.7
     minimum_cond = df.acc_percent >= threshold
 
