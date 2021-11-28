@@ -59,9 +59,9 @@ def simple_augment_test(
 
 def randaugment_train(
     dataset: str = "CIFAR10",
-    img_size: float = 32,
+    img_size: float = 224,
     n_select: int = 2,
-    level: int = 8,
+    level: int = 5,
     n_level: int = 31,
 ) -> transforms.Compose:
     """Random augmentation policy for training CIFAR100."""
@@ -70,7 +70,7 @@ def randaugment_train(
         "AutoContrast",
         "Equalize",
         # "Rotate",
-        "Solarize",
+        # "Solarize",
         # "Color",
         "Posterize",
         # "Contrast",

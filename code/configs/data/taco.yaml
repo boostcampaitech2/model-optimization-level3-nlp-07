@@ -19,7 +19,7 @@ AUG_TRAIN : "randaugment_train"
 AUG_TEST: "simple_augment_test"
 AUG_TRAIN_PARAMS: 
 BATCH_SIZE: 64
-EPOCHS: 100
+EPOCHS: 30
 VAL_RATIO: 0.0
-INIT_LR: 0.1
+INIT_LR: 0.01
 FP16: True

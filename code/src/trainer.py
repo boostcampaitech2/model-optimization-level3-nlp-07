@@ -176,14 +176,14 @@ class TorchTrainer:
                 model=self.model, test_dataloader=val_dataloader
             )
 
-            if epoch == 0 and os.path.exists(self.model_path):
-                try:
-                    base_model = torch.load(self.model_path.split("result_model")[0])
-                    _, best_test_f1, best_test_acc = self.test(
-                        model=base_model, test_dataloader=val_dataloader
-                    )    
-                except:
-                    pass
+            # if epoch == 0 and os.path.exists(self.model_path):
+            #     try:
+            #         base_model = torch.load(self.model_path.split("result_model")[0])
+            #         _, best_test_f1, best_test_acc = self.test(
+            #             model=base_model, test_dataloader=val_dataloader
+            #         )    
+            #     except:
+            #         pass
 
             if best_test_f1 > test_f1:
                 continue
