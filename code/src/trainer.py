@@ -134,6 +134,7 @@ class TorchTrainer:
             preds, gt = [], []
             pbar = tqdm(enumerate(train_dataloader), total=len(train_dataloader))
             self.model.train()
+            # print(self.optimizer)
             for batch, (data, labels) in pbar:
                 data, labels = data.to(self.device), labels.to(self.device)
 
@@ -155,7 +156,7 @@ class TorchTrainer:
                     loss.backward()
                     self.optimizer.step()
                 self.scheduler.step()
-
+                
                 _, pred = torch.max(outputs, 1)
                 total += labels.size(0)
                 correct += (pred == labels).sum().item()
@@ -171,19 +172,10 @@ class TorchTrainer:
                     f"F1(macro): {f1_score(y_true=gt, y_pred=preds, labels=label_list, average='macro', zero_division=0):.2f}"
                 )
             pbar.close()
-
+            # self.scheduler.step()
             _, test_f1, test_acc = self.test(
                 model=self.model, test_dataloader=val_dataloader
             )
-
-            # if epoch == 0 and os.path.exists(self.model_path):
-            #     try:
-            #         base_model = torch.load(self.model_path.split("result_model")[0])
-            #         _, best_test_f1, best_test_acc = self.test(
-            #             model=base_model, test_dataloader=val_dataloader
-            #         )    
-            #     except:
-            #         pass
 
             if best_test_f1 > test_f1:
                 continue

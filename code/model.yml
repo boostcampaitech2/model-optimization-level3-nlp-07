@@ -1,0 +1,65 @@
+INPUT_SIZE:
+- 224
+- 224
+backbone:
+- - 3
+  - Conv
+  - - 64
+    - 3
+    - 2
+    - null
+    - 1
+    - Hardswish
+- - 5
+  - Conv
+  - - 128
+    - 1
+    - 2
+    - null
+    - 1
+    - Hardswish
+- - 5
+  - InvertedResidualv3
+  - - 5
+    - 1.1
+    - 8
+    - 1
+    - 1
+    - 2
+- - 5
+  - Conv
+  - - 256
+    - 3
+    - 1
+    - null
+    - 1
+    - Hardswish
+- - 1
+  - DWConv
+  - - 32
+    - 1
+    - 1
+    - null
+    - Hardswish
+- - 1
+  - InvertedResidualv2
+  - - 160
+    - 8
+    - 1
+- - 1
+  - Conv
+  - - 1024
+    - 1
+    - 1
+- - 1
+  - GlobalAvgPool
+  - []
+- - 1
+  - Flatten
+  - []
+- - 1
+  - Linear
+  - - 6
+depth_multiple: 0.25
+input_channel: 3
+width_multiple: 0.25

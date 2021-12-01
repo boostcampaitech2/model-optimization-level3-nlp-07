@@ -21,8 +21,8 @@ import sys
 import logging
 import yaml
 
-EPOCH = 10
-N_TRIALS = 10
+EPOCH = 15
+N_TRIALS = 30
 # DATA_PATH = "/opt/ml/input/data"  # type your data path here that contains test, train and val directories
 DATA_PATH = "/opt/ml/data/"
 # SAVE_PATH = "./exp/latest/"
@@ -33,10 +33,10 @@ RESULT_MODEL_PATH = "./best.pt" # result model will be saved in this path
 
 def search_hyperparam(trial: optuna.trial.Trial) -> Dict[str, Any]:
     """Search hyperparam from user-specified search space."""
-    epochs = trial.suggest_int("epochs", low=30, high=30, step=30)
+    epochs = trial.suggest_int("epochs", low=10, high=10, step=10)
     img_size = trial.suggest_categorical("img_size", [96, 112, 168, 224])
     n_select = trial.suggest_int("n_select", low=0, high=6, step=2)
-    batch_size = trial.suggest_int("batch_size", low=64, high=64, step=64)
+    batch_size = trial.suggest_int("batch_size", low=128, high=128, step=128)
     return {
         "EPOCHS": epochs,
         "IMG_SIZE": img_size,
@@ -335,49 +335,49 @@ def search_model(trial: optuna.trial.Trial) -> List[Any]:
         model.append([m7_repeat, m7, m7_args])
 
     # Module 8
-    m8 = trial.suggest_categorical(
-        "m8", ["Conv", "DWConv", "InvertedResidualv2", "InvertedResidualv3", "Pass"]
-    )
-    m8_args = []
-    m8_repeat = trial.suggest_int("m8/repeat", 1, 5)
-    m8_stride = trial.suggest_int("m8/stride", low=1, high=UPPER_STRIDE)
-    if m8 == "Conv":
-        # Conv args: [out_channel, kernel_size, stride, padding, groups, activation]
-        m8_out_channel = trial.suggest_int(
-            "m8/out_channels", low=128, high=1024, step=128
-        )
-        m8_kernel = trial.suggest_int("m8/kernel_size", low=1, high=5, step=2)
-        m8_activation = trial.suggest_categorical(
-            "m8/activation", ["ReLU", "Hardswish"]
-        )
-        m8_args = [m8_out_channel, m8_kernel, m8_stride, None, 1, m8_activation]
-    elif m8 == "DWConv":
-        # DWConv args: [out_channel, kernel_size, stride, padding_size, activation]
-        m8_out_channel = trial.suggest_int(
-            "m8/out_channels", low=128, high=1024, step=128
-        )
-        m8_kernel = trial.suggest_int("m8/kernel_size", low=1, high=5, step=2)
-        m8_activation = trial.suggest_categorical(
-            "m8/activation", ["ReLU", "Hardswish"]
-        )
-        m8_args = [m8_out_channel, m8_kernel, m8_stride, None, m8_activation]
-    elif m8 == "InvertedResidualv2":
-        m8_c = trial.suggest_int("m8/v2_c", low=16, high=160, step=16)
-        m8_t = trial.suggest_int("m8/v2_t", low=1, high=8)
-        m8_args = [m8_c, m8_t, m8_stride]
-    elif m8 == "InvertedResidualv3":
-        m8_kernel = trial.suggest_int("m8/kernel_size", low=3, high=5, step=2)
-        m8_t = round(trial.suggest_float("m8/v3_t", low=1.0, high=6.0, step=0.1), 1)
-        m8_c = trial.suggest_int("m8/v3_c", low=8, high=160, step=8)
-        m8_se = trial.suggest_categorical("m8/v3_se", [0, 1])
-        m8_hs = trial.suggest_categorical("m8/v3_hs", [0, 1])
-        m8_args = [m8_kernel, m8_t, m8_c, m8_se, m8_hs, m8_stride]
-    if not m8 == "Pass":
-        if m8_stride == 2:
-            n_stride += 1
-            if n_stride >= MAX_NUM_STRIDE:
-                UPPER_STRIDE = 1
-        model.append([m8_repeat, m8, m8_args])
+    # m8 = trial.suggest_categorical(
+    #     "m8", ["Conv", "DWConv", "InvertedResidualv2", "InvertedResidualv3", "Pass"]
+    # )
+    # m8_args = []
+    # m8_repeat = trial.suggest_int("m8/repeat", 1, 5)
+    # m8_stride = trial.suggest_int("m8/stride", low=1, high=UPPER_STRIDE)
+    # if m8 == "Conv":
+    #     # Conv args: [out_channel, kernel_size, stride, padding, groups, activation]
+    #     m8_out_channel = trial.suggest_int(
+    #         "m8/out_channels", low=128, high=1024, step=128
+    #     )
+    #     m8_kernel = trial.suggest_int("m8/kernel_size", low=1, high=5, step=2)
+    #     m8_activation = trial.suggest_categorical(
+    #         "m8/activation", ["ReLU", "Hardswish"]
+    #     )
+    #     m8_args = [m8_out_channel, m8_kernel, m8_stride, None, 1, m8_activation]
+    # elif m8 == "DWConv":
+    #     # DWConv args: [out_channel, kernel_size, stride, padding_size, activation]
+    #     m8_out_channel = trial.suggest_int(
+    #         "m8/out_channels", low=128, high=1024, step=128
+    #     )
+    #     m8_kernel = trial.suggest_int("m8/kernel_size", low=1, high=5, step=2)
+    #     m8_activation = trial.suggest_categorical(
+    #         "m8/activation", ["ReLU", "Hardswish"]
+    #     )
+    #     m8_args = [m8_out_channel, m8_kernel, m8_stride, None, m8_activation]
+    # elif m8 == "InvertedResidualv2":
+    #     m8_c = trial.suggest_int("m8/v2_c", low=16, high=160, step=16)
+    #     m8_t = trial.suggest_int("m8/v2_t", low=1, high=8)
+    #     m8_args = [m8_c, m8_t, m8_stride]
+    # elif m8 == "InvertedResidualv3":
+    #     m8_kernel = trial.suggest_int("m8/kernel_size", low=3, high=5, step=2)
+    #     m8_t = round(trial.suggest_float("m8/v3_t", low=1.0, high=6.0, step=0.1), 1)
+    #     m8_c = trial.suggest_int("m8/v3_c", low=8, high=160, step=8)
+    #     m8_se = trial.suggest_categorical("m8/v3_se", [0, 1])
+    #     m8_hs = trial.suggest_categorical("m8/v3_hs", [0, 1])
+    #     m8_args = [m8_kernel, m8_t, m8_c, m8_se, m8_hs, m8_stride]
+    # if not m8 == "Pass":
+    #     if m8_stride == 2:
+    #         n_stride += 1
+    #         if n_stride >= MAX_NUM_STRIDE:
+    #             UPPER_STRIDE = 1
+    #     model.append([m8_repeat, m8, m8_args])
 
     # last layer
     last_dim = trial.suggest_int("last_dim", low=128, high=1024, step=128)
@@ -397,7 +397,7 @@ def search_model(trial: optuna.trial.Trial) -> List[Any]:
     module_info["m6"] = {"type": m6, "repeat": m6_repeat, "stride": m6_stride}
     module_info["m7"] = {"type": m7, "repeat": m7_repeat, "stride": m7_stride}
 
-    module_info["m8"] = {"type": m8, "repeat": m8_repeat, "stride": m8_stride}
+    # module_info["m8"] = {"type": m8, "repeat": m8_repeat, "stride": m8_stride}
 
     return model, module_info
 
@@ -437,11 +437,11 @@ def objective(trial: optuna.trial.Trial, device) -> Tuple[float, int, float]:
     data_config: Dict[str, Any] = {}
     data_config["DATA_PATH"] = DATA_PATH
     data_config["DATASET"] = "TACO"
-    data_config["AUG_TRAIN"] = "randaugment_train"
-    data_config["AUG_TEST"] = "simple_augment_test"
+    data_config["AUG_TRAIN"] = "simple_augment_train"
+    data_config["AUG_TEST"] = "simple_augment_test" 
     data_config["AUG_TRAIN_PARAMS"] = {
-        "n_select": hyperparams["n_select"],
-    }
+        # "n_select": hyperparams["n_select"],
+    []}
     data_config["AUG_TEST_PARAMS"] = None
     data_config["BATCH_SIZE"] = hyperparams["BATCH_SIZE"]
     data_config["VAL_RATIO"] = 0.8
@@ -509,8 +509,8 @@ def get_best_trial_with_condition(optuna_study: optuna.study.Study) -> Dict[str,
         }
     )
     ## minimum condition : accuracy >= threshold
-    # threshold = 0.6
-    threshold = 0.7
+    threshold = 0.5
+    # threshold = 0.7
     minimum_cond = df.acc_percent >= threshold
 
     try:

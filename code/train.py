@@ -62,6 +62,11 @@ def train(
         pct_start=0.05,
         # verbose=True
     )
+    # scheduler = torch.optim.lr_scheduler.LambdaLR(
+    #     optimizer=optimizer,
+    #     lr_lambda=lambda epoch : 0.95**epoch
+    #     # verbose=True
+    # )
     criterion = CustomCriterion(
         samples_per_cls=get_label_counts(data_config["DATA_PATH"])
         if data_config["DATASET"] == "TACO"
