@@ -43,4 +43,5 @@ def create_dali_dl(config
         last_batch_policy=LastBatchPolicy.PARTIAL,
         auto_reset=True
     )
-    
+
+    return dali_dl
