@@ -73,7 +73,7 @@ class RandAugmentation(Augmentation):
         self,
         transforms: List[str],
         n_select: int = 2,
-        level: int = 14,
+        level: int = 10,
         n_level: int = 31,
     ) -> None:
         """Initialize."""

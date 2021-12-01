@@ -115,9 +115,6 @@ class SwishImplementation(torch.autograd.Function):
 
 
 class Swish(nn.Module):
-    def __init__(self):
-        super(Swish, self).__init__()
-        
     def forward(self, x):
         return SwishImplementation.apply(x)
 
@@ -168,8 +165,9 @@ class MBConvGenerator(GeneratorAbstract):
         repeat(=n), [c, t, s] // note original notation from paper is [t, c, n, s]
         """
         module = []
-        t, c, s, k = self.args  # c is equivalent as self.out_channel
-        inp, oup = self.in_channel, self.out_channel
+        # t, c, s, k = self.args  # c is equivalent as self.out_channel
+        # inp, oup = self.in_channel, self.out_channel
+        inp, oup, t, k, s, r, d = self.args
         for i in range(repeat):
             stride = s if i == 0 else 1
             module.append(
@@ -179,6 +177,8 @@ class MBConvGenerator(GeneratorAbstract):
                     expand_ratio=t,
                     stride=stride,
                     kernel_size=k,
+                    reduction_ratio=r,
+                    drop_connect_rate=d
                 )
             )
             inp = oup

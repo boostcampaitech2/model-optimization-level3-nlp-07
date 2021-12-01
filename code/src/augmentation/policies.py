@@ -61,7 +61,7 @@ def randaugment_train(
     dataset: str = "CIFAR10",
     img_size: float = 32,
     n_select: int = 2,
-    level: int = 14,
+    level: int = 8,
     n_level: int = 31,
 ) -> transforms.Compose:
     """Random augmentation policy for training CIFAR100."""
@@ -69,17 +69,17 @@ def randaugment_train(
         "Identity",
         "AutoContrast",
         "Equalize",
-        "Rotate",
+        # "Rotate",
         "Solarize",
-        "Color",
+        # "Color",
         "Posterize",
-        "Contrast",
+        # "Contrast",
         "Brightness",
-        "Sharpness",
-        "ShearX",
-        "ShearY",
-        "TranslateX",
-        "TranslateY",
+        # "Sharpness",
+        # "ShearX",
+        # "ShearY",
+        # "TranslateX",
+        # "TranslateY",
     ]
     return transforms.Compose(
         [

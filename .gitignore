@@ -6,4 +6,6 @@
 **/search
 **/input
 **/fire
+*.ts
+*.pt
 !.gitignore

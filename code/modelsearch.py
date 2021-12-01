@@ -28,14 +28,16 @@ MODULES=[
     "Bottleneck", # out_channels,shortcut(bool),groups(dw),expansion:float,activation:str
     "Conv", #out_channels,kernel_size,stride,null,groups,activation
     "DWConv", #out_channels,kernel_size,stride,activation
-    "Linear", #out_features,activation
     "InvertedResidualv2", #out_channels,expansion,stride
     "InvertedResidualv3", #kernel_size,expansion,out_channels,se,hardswish,stride
     "FusedMBConv", #expand_ratio,out_channels,stride,kernel
     "MBConv", #expand_ratio,out_channels,stride,kernel
+    "Fire", #squeeze_channels,expand1x1_channels,expand3x3_channels
+    "Dropout", #p
 ]
 
 def suggest_hp(module_name,out_channels,trial,s):
+    stride=1
     if module_name=='Bottleneck':
         return [out_channels],0
     elif module_name=='Conv':
@@ -46,8 +48,6 @@ def suggest_hp(module_name,out_channels,trial,s):
         if s<5:
             stride=trial.suggest_int("stride", 1, 2)
         return [out_channels,3,stride,None,trial.suggest_categorical("activation", ["ReLU", "HardSwish"])],stride==2
-    elif module_name=='Linear':
-        return [out_channels],0
     elif module_name=='InvertedResidualv2':
         if s<5:
             stride=trial.suggest_int("stride", 1, 2)
@@ -64,21 +64,23 @@ def suggest_hp(module_name,out_channels,trial,s):
         if s<5:
             stride=trial.suggest_int("stride", 1, 2)
         return [trial.suggest_int("expand_ratio", 1, 4),out_channels,stride,3],stride==2
+    elif module_name=='Dropout':
+        return [trial.suggest_uniform("p", 0, 0.7)],0
 
 def define_model(trial):
-    n_layers = trial.suggest_int("n_layers", 1, 10)
+    n_layers = 6
     layers = []
     s=0
-    in_features = 3
+    layers.append([2,'Conv',[32,3,1,None,1,'HardSwish']])
+    in_features = 32
     for i in range(n_layers):
-        repeats=trial.suggest_int("repeat_" + str(i), 1, 3)
+        repeats=trial.suggest_int("repeat_" + str(i), 1, 2)
         module=trial.suggest_int("module_" + str(i), 0, len(MODULES)-1)
-        out_features = int(in_features*trial.suggest_float("n_units_l{}".format(i), 1, 3)) if trial.suggest_categorical("expand_{}".format(i), [True, False]) else in_features
+        out_features = int(in_features*trial.suggest_float("n_units_l{}".format(i), 1, 1.5)+4)//8*8
         arg,sp=suggest_hp(MODULES[module],out_features,trial,s)
         s+=sp
         layers.append([repeats,MODULES[module],arg])
         in_features = out_features
-
     layers.append([1, 'GlobalAvgPool', []])
     layers.append([1, 'Flatten', []])
     layers.append([1, 'Linear', [6]])
@@ -112,8 +114,8 @@ def objective(trial):
 if __name__=="__main__":
     
 
-    study = optuna.create_study(study_name="first",directions=["minimize","maximize"])
-    study.optimize(objective, n_trials=100)
-    print(study.best_params)
+    study = optuna.create_study(directions=["minimize","maximize"])
+    study.optimize(objective, n_trials=20)
+    #print(study.best_params)
     fig = optuna.visualization.plot_pareto_front(study)
     fig.show()

@@ -48,8 +48,8 @@ def train(
     train_dl, val_dl, test_dl = create_dataloader(data_config)
 
     # Create optimizer, scheduler, criterion
-    optimizer = torch.optim.SGD(
-        model_instance.model.parameters(), lr=data_config["INIT_LR"], momentum=0.9
+    optimizer = torch.optim.Adam(
+        model_instance.model.parameters(), lr=data_config["INIT_LR"]
     )
     scheduler = torch.optim.lr_scheduler.OneCycleLR(
         optimizer=optimizer,
@@ -91,6 +91,8 @@ def train(
     test_loss, test_f1, test_acc,flops = trainer.test(
         model=model_instance.model, test_dataloader=val_dl if val_dl else test_dl
     )
+    del model_instance
+    torch.cuda.empty_cache()
     return test_loss, test_f1, test_acc, flops
 
 
