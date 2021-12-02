@@ -21,8 +21,13 @@ dali_aug_test = {
 
 
 @pipeline_def
-def dali_mixed_pipeline():
-    image_dir = "/opt/ml/data/train"
+def dali_mixed_pipeline(ty):
+    if ty == 'train':
+        image_dir = "/opt/ml/data/train"
+    elif ty == 'val':
+        image_dir = "/opt/ml/data/val"
+    elif ty == 'test':
+        image_dir = "/opt/ml/data/test"
     jpegs, labels = fn.readers.file(name="Reader", file_root=image_dir, random_shuffle=True)
     images = fn.decoders.image(jpegs, device="mixed")
     images= fn.normalize(images.gpu(), mean=0, stddev=255)  # same as divide by 255
@@ -30,12 +35,13 @@ def dali_mixed_pipeline():
     return images, labels.gpu()
 
 
-def create_dali_dl(
+def create_dali_dl(ty
 ):
+    
     try:
         del(pipe)
     except:
-        pipe = dali_mixed_pipeline(batch_size=64,device_id=0,num_threads=4)
+        pipe = dali_mixed_pipeline(ty,batch_size=64,device_id=0,num_threads=4)
     pipe.build()
     dali_dl = DALIGenericIterator(
         pipelines=pipe,
