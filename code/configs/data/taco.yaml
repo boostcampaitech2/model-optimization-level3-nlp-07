@@ -14,12 +14,14 @@
 DATA_PATH: "/opt/ml/data/"
 DATASET: "TACO"
 IMG_SIZE: 224
-# AUG_TRAIN: "simple_augment_train"
-AUG_TRAIN : "randaugment_train"
+AUG_TRAIN: "randaugment_train"
 AUG_TEST: "simple_augment_test"
 AUG_TRAIN_PARAMS: 
-BATCH_SIZE: 64
-EPOCHS: 100
+  n_select: 2
+  level: null
+AUG_TEST_PARAMS: null
+BATCH_SIZE: 16
+EPOCHS: 200
 VAL_RATIO: 0.0
 INIT_LR: 0.1
 FP16: True

@@ -22,7 +22,7 @@ import logging
 
 # EPOCH = 100
 EPOCH = 10
-N_TRIALS = 5
+N_TRIALS = 30
 # DATA_PATH = "/opt/ml/input/data"  # type your data path here that contains test, train and val directories
 DATA_PATH = "/opt/ml/data/"
 SAVE_PATH = "./tune_save"
@@ -33,10 +33,10 @@ RESULT_MODEL_PATH = os.path.join(SAVE_PATH, "/result_model.pt") # result model w
 
 def search_hyperparam(trial: optuna.trial.Trial) -> Dict[str, Any]:
     """Search hyperparam from user-specified search space."""
-    epochs = trial.suggest_int("epochs", low=30, high=30, step=30)
-    img_size = trial.suggest_categorical("img_size", [96, 112, 168, 224])
-    n_select = trial.suggest_int("n_select", low=0, high=6, step=2)
-    batch_size = trial.suggest_int("batch_size", low=64, high=64, step=64)
+    epochs = trial.suggest_int("epochs", low=10, high=10, step=10)
+    img_size = trial.suggest_categorical("img_size", [224])
+    n_select = trial.suggest_int("n_select", low=2, high=2, step=2)
+    batch_size = trial.suggest_int("batch_size", low=16, high=16, step=16)
     return {
         "EPOCHS": epochs,
         "IMG_SIZE": img_size,
