@@ -13,7 +13,7 @@
 
 DATA_PATH: "/opt/ml/data/"
 DATASET: "TACO"
-IMG_SIZE: 224
+IMG_SIZE: 168
 AUG_TRAIN: "simple_augment_train"
 # AUG_TRAIN : "randaugment_train"
 AUG_TEST: "simple_augment_test"

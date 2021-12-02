@@ -155,7 +155,7 @@ class TorchTrainer:
                 else:
                     loss.backward()
                     self.optimizer.step()
-                self.scheduler.step()
+                # self.scheduler.step()
                 
                 _, pred = torch.max(outputs, 1)
                 total += labels.size(0)
@@ -172,7 +172,7 @@ class TorchTrainer:
                     f"F1(macro): {f1_score(y_true=gt, y_pred=preds, labels=label_list, average='macro', zero_division=0):.2f}"
                 )
             pbar.close()
-            # self.scheduler.step()
+            self.scheduler.step()
             _, test_f1, test_acc = self.test(
                 model=self.model, test_dataloader=val_dataloader
             )
