@@ -54,19 +54,19 @@ def train(
     optimizer = torch.optim.Adam(
         model_instance.model.parameters(), lr=data_config["INIT_LR"]
     )
-    # scheduler = torch.optim.lr_scheduler.OneCycleLR(
-    #     optimizer=optimizer,
-    #     max_lr=data_config["INIT_LR"],
-    #     steps_per_epoch=len(train_dl),
-    #     epochs=data_config["EPOCHS"],
-    #     pct_start=0.05,
-    #     # verbose=True
-    # )
-    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
+    scheduler = torch.optim.lr_scheduler.OneCycleLR(
         optimizer=optimizer,
-        T_max=10,
-        eta_min=1e-5
+        max_lr=data_config["INIT_LR"],
+        steps_per_epoch=len(train_dl),
+        epochs=data_config["EPOCHS"],
+        pct_start=0.05,
+        # verbose=True
     )
+    # scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
+    #     optimizer=optimizer,
+    #     T_max=10,
+    #     eta_min=1e-5
+    # )
     # scheduler = torch.optim.lr_scheduler.LambdaLR(
     #     optimizer=optimizer,
     #     lr_lambda=lambda epoch : 0.95**epoch
