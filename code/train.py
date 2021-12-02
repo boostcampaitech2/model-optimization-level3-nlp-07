@@ -84,7 +84,7 @@ def train(
         verbose=1,
     )
     best_acc, best_f1 = trainer.train(
-        train_dataloader=dali_dl,
+        train_dataloader=train_dl,
         n_epoch=data_config["EPOCHS"],
         val_dataloader=val_dl if val_dl else test_dl,
     )
