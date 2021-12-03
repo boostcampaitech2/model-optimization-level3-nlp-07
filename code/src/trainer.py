@@ -7,6 +7,7 @@
 import os
 import shutil
 from typing import Optional, Tuple, Union
+import thop
 
 import numpy as np
 import torch
@@ -250,8 +251,8 @@ class TorchTrainer:
         f1 = f1_score(
             y_true=gt, y_pred=preds, labels=label_list, average="macro", zero_division=0
         )
-        return loss, f1, accuracy
-
+        flops, _ = thop.profile(model, inputs=(torch.randn(1,3, 224,224).to(self.device),), verbose=False)
+        return loss, f1, accuracy, flops
 
 def count_model_params(
     model: torch.nn.Module,

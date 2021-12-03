@@ -94,10 +94,10 @@ def train(
 
     # evaluate model with test set
     model_instance.model.load_state_dict(torch.load(model_path))
-    test_loss, test_f1, test_acc = trainer.test(
+    test_loss, test_f1, test_acc, test_flops = trainer.test(
         model=model_instance.model, test_dataloader=dali_val_dl if dali_val_dl else test_dl
     )
-    return test_loss, test_f1, test_acc
+    return test_loss, test_f1, test_acc, test_flops
 
 
 if __name__ == "__main__":

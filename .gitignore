@@ -9,3 +9,4 @@
 *.ts
 *.pt
 !.gitignore
+**/wandb
