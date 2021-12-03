@@ -12,7 +12,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import yaml
-
+from src.daliloader import create_dali_dl
 from src.dataloader import create_dataloader
 from src.loss import CustomCriterion
 from src.model import Model
@@ -46,7 +46,10 @@ def train(
 
     # Create dataloader
     train_dl, val_dl, test_dl = create_dataloader(data_config)
-
+    # builing dali loaders, bosung's dali code
+    #===========================================
+    dali_dl = create_dali_dl(data_config)
+    #===========================================
     # Create optimizer, scheduler, criterion
     optimizer = torch.optim.SGD(
         model_instance.model.parameters(), lr=data_config["INIT_LR"], momentum=0.9
@@ -68,7 +71,7 @@ def train(
     scaler = (
         torch.cuda.amp.GradScaler() if fp16 and device != torch.device("cpu") else None
     )
-
+    
     # Create trainer
     trainer = TorchTrainer(
         model=model_instance.model,
@@ -98,12 +101,12 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Train model.")
     parser.add_argument(
         "--model",
-        default="configs/model/mobilenetv3.yaml",
+        default="/opt/ml/code/configs/model/mobilenetv3.yaml",
         type=str,
         help="model config",
     )
     parser.add_argument(
-        "--data", default="configs/data/taco.yaml", type=str, help="data config"
+        "--data", default="/opt/ml/code/configs/data/taco.yaml", type=str, help="data config"
     )
     args = parser.parse_args()
 
@@ -115,7 +118,7 @@ if __name__ == "__main__":
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     log_dir = os.environ.get("SM_MODEL_DIR", os.path.join("exp", 'latest'))
 
-    if os.path.exists(log_dir): 
+    if os.path.isfile(log_dir+'/best.pt'): 
         modified = datetime.fromtimestamp(os.path.getmtime(log_dir + '/best.pt'))
         new_log_dir = os.path.dirname(log_dir) + '/' + modified.strftime("%Y-%m-%d_%H-%M-%S")
         os.rename(log_dir, new_log_dir)
