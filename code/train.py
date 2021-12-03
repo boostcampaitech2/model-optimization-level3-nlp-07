@@ -46,10 +46,11 @@ def train(
 
     # Create dataloader
     train_dl, val_dl, test_dl = create_dataloader(data_config)
-    # builing dali loaders, bosung's dali code
-    #===========================================
-    dali_dl = create_dali_dl(data_config)
-    #===========================================
+
+    # Create dali dataloader #Added by KBS
+    dali_train_dl = create_dali_dl("train")
+    dali_val_dl = create_dali_dl("val")
+    dali_test_dl = create_dali_dl("test")
     # Create optimizer, scheduler, criterion
     optimizer = torch.optim.SGD(
         model_instance.model.parameters(), lr=data_config["INIT_LR"], momentum=0.9
@@ -71,7 +72,7 @@ def train(
     scaler = (
         torch.cuda.amp.GradScaler() if fp16 and device != torch.device("cpu") else None
     )
-    
+
     # Create trainer
     trainer = TorchTrainer(
         model=model_instance.model,
@@ -84,15 +85,17 @@ def train(
         verbose=1,
     )
     best_acc, best_f1 = trainer.train(
-        train_dataloader=train_dl,
+
+        train_dataloader=dali_train_dl,
+
         n_epoch=data_config["EPOCHS"],
-        val_dataloader=val_dl if val_dl else test_dl,
+        val_dataloader=dali_val_dl if dali_val_dl else test_dl,
     )
 
     # evaluate model with test set
     model_instance.model.load_state_dict(torch.load(model_path))
     test_loss, test_f1, test_acc = trainer.test(
-        model=model_instance.model, test_dataloader=val_dl if val_dl else test_dl
+        model=model_instance.model, test_dataloader=dali_val_dl if dali_val_dl else test_dl
     )
     return test_loss, test_f1, test_acc
 
@@ -101,12 +104,12 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Train model.")
     parser.add_argument(
         "--model",
-        default="/opt/ml/code/configs/model/mobilenetv3.yaml",
+        default="configs/model/mobilenetv3.yaml",
         type=str,
         help="model config",
     )
     parser.add_argument(
-        "--data", default="/opt/ml/code/configs/data/taco.yaml", type=str, help="data config"
+        "--data", default="configs/data/taco.yaml", type=str, help="data config"
     )
     args = parser.parse_args()
 
