@@ -13,6 +13,9 @@ from src.modules.linear import Linear, LinearGenerator
 from src.modules.poolings import (AvgPoolGenerator, GlobalAvgPool,
                                   GlobalAvgPoolGenerator, MaxPoolGenerator)
 from src.modules.squeezenet import Fire, FireGenerator
+from src.modules.fusedmbconv import FusedMBConv, FusedMBConvGenerator
+from src.modules.mbconv import MBConv, MBConvGenerator
+from src.modules.dropout import Dropout, DropoutGenerator
 
 __all__ = [
     "ModuleGenerator",
@@ -36,5 +39,11 @@ __all__ = [
     "GlobalAvgPoolGenerator",
     "InvertedResidualv2Generator",
     "InvertedResidualv3Generator",
-    "FireGenerator"
+    "FireGenerator",
+    "FusedMBConvGenerator",
+    "FusedMBConv",
+    "MBConvGenerator",
+    "MBConv",
+    "DropoutGenerator",
+    "Dropout",
 ]

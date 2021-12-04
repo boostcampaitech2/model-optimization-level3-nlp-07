@@ -19,6 +19,8 @@ import json
 import os
 import sys
 import logging
+import yaml
+from password import Password
 
 # EPOCH = 100
 EPOCH = 10
@@ -424,8 +426,8 @@ def objective(trial: optuna.trial.Trial, device) -> Tuple[float, int, float]:
     )
     model_config["backbone"], module_info = search_model(trial)
     try:
-        with open("./module_info.json", "a") as f:
-            json.dump(module_info, f)
+        with open("./model.yaml", "w") as f:
+            yaml.dump(model_config, f)
     except:
         pass
     hyperparams = search_hyperparam(trial)
@@ -465,7 +467,6 @@ def objective(trial: optuna.trial.Trial, device) -> Tuple[float, int, float]:
         steps_per_epoch=len(train_loader),
         epochs=hyperparams["EPOCHS"],
         pct_start=0.1,
-        verbose=True
     )
     # scheduler = torch.optim.lr_scheduler.LamdaLR(
     #     optimizer=optimizer,
@@ -579,6 +580,6 @@ def tune(gpu_id, storage: str = None):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Optuna tuner.")
     parser.add_argument("--gpu", default=0, type=int, help="GPU id to use")
-    parser.add_argument("--storage", default="", type=str, help="Optuna database storage path.")
+    parser.add_argument("--storage", default=f"postgresql://optuna:{Password()}@127.0.0.1/optuna", type=str, help="Optuna database storage path.")
     args = parser.parse_args()
     tune(args.gpu, storage=args.storage if args.storage != "" else None)

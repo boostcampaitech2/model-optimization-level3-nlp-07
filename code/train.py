@@ -117,7 +117,7 @@ if __name__ == "__main__":
     data_config["DATA_PATH"] = os.environ.get("SM_CHANNEL_TRAIN", data_config["DATA_PATH"])
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    log_dir = os.environ.get("SM_MODEL_DIR", os.path.join("fire", 'latest'))
+    log_dir = os.environ.get("SM_MODEL_DIR", os.path.join("exp", 'latest'))
     try:
         if os.path.exists(log_dir): 
             modified = datetime.fromtimestamp(os.path.getmtime(log_dir + '/best.pt'))

@@ -165,9 +165,8 @@ class MBConvGenerator(GeneratorAbstract):
         repeat(=n), [c, t, s] // note original notation from paper is [t, c, n, s]
         """
         module = []
-        # t, c, s, k = self.args  # c is equivalent as self.out_channel
-        # inp, oup = self.in_channel, self.out_channel
-        inp, oup, t, k, s, r, d = self.args
+        t, c, s, k = self.args  # c is equivalent as self.out_channel
+        inp, oup = self.in_channel, self.out_channel
         for i in range(repeat):
             stride = s if i == 0 else 1
             module.append(
@@ -177,8 +176,8 @@ class MBConvGenerator(GeneratorAbstract):
                     expand_ratio=t,
                     stride=stride,
                     kernel_size=k,
-                    reduction_ratio=r,
-                    drop_connect_rate=d
+                    reduction_ratio=4,
+                    drop_connect_rate=0.2
                 )
             )
             inp = oup
