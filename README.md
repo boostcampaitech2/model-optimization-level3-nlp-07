@@ -89,17 +89,11 @@
     - 5-10 epochs만 가볍게 학습하여 모델의 떡잎만 확인!
 - `mean_time`, `f1_score`, `flops`, `params_nums`를 `Optuna` 의 objective 평가 지표로 넣어주어 경량화 모델 탐색
 
-![30번의 trial 을 통해 찾은 Optimal Model ](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/de8b0b3c-77bb-4296-9b8b-fdab634ad236/output.png)
-
-30번의 trial 을 통해 찾은 Optimal Model 
-
 ### Evaluation
 
 - 최종 score는 모델의 F1-score와 모델의 Submit time을 통해 계산됨
 - F1-score : 분류 성능 지표로, 기준이 되는 모델의 F1 score에서 제출한 모델의 F1 score의 차이를 구한 뒤, 상수를 곱하고 sigmoid 함수를 적용한 값
 - Submit time : 기준이 되는 모델의 추론하는 시간으로 제출한 모델의 추론하는 시간을 나눈 값
-
-![스크린샷 2021-12-03 오후 5.45.20.png](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/da5df73f-8daf-4d88-80e3-030ebac12594/스크린샷_2021-12-03_오후_5.45.20.png)
 
 ### Project Management
 
