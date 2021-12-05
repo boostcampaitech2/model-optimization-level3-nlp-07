@@ -103,6 +103,7 @@ def train(
     )
     if loader_mode == "PT":
     # Create trainer
+
         trainer = TorchTrainer(
             model=model_instance.model,
             criterion=criterion,
@@ -112,6 +113,7 @@ def train(
             device=device,
             model_path=model_path,
             verbose=1,
+
     )
     
         best_acc, best_f1 = trainer.train(
