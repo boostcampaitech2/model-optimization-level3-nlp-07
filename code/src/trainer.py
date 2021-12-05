@@ -7,6 +7,7 @@
 import os
 import shutil
 from typing import Optional, Tuple, Union
+import thop
 
 import numpy as np
 import torch
@@ -126,7 +127,7 @@ class TorchTrainer:
         """
         best_test_acc = -1.0
         best_test_f1 = -1.0
-        num_classes = _get_len_label_from_dataset(train_dataloader.dataset)
+        num_classes = 6 #_get_len_label_from_dataset(train_dataloader.dataset)
         label_list = [i for i in range(num_classes)]
 
         for epoch in range(n_epoch):
@@ -134,8 +135,11 @@ class TorchTrainer:
             preds, gt = [], []
             pbar = tqdm(enumerate(train_dataloader), total=len(train_dataloader))
             self.model.train()
+
+            # print(self.optimizer)
             for batch, (data, labels) in pbar:
                 data, labels = data.to(self.device), labels.to(self.device)
+
 
                 if self.scaler:
                     with torch.cuda.amp.autocast():
@@ -155,7 +159,7 @@ class TorchTrainer:
                     loss.backward()
                     self.optimizer.step()
                 self.scheduler.step()
-
+                
                 _, pred = torch.max(outputs, 1)
                 total += labels.size(0)
                 correct += (pred == labels).sum().item()
@@ -171,25 +175,15 @@ class TorchTrainer:
                     f"F1(macro): {f1_score(y_true=gt, y_pred=preds, labels=label_list, average='macro', zero_division=0):.2f}"
                 )
             pbar.close()
-
+            # self.scheduler.step()
             _, test_f1, test_acc = self.test(
                 model=self.model, test_dataloader=val_dataloader
             )
-
-            if epoch == 0 and os.path.exists(self.model_path):
-                try:
-                    base_model = torch.load(self.model_path.split("result_model")[0])
-                    _, best_test_f1, best_test_acc = self.test(
-                        model=base_model, test_dataloader=val_dataloader
-                    )    
-                except:
-                    pass
 
             if best_test_f1 > test_f1:
                 continue
             best_test_acc = test_acc
             best_test_f1 = test_f1
-            
             print(f"Model saved. Current best test f1: {best_test_f1:.3f}")
             save_model(
                 model=self.model,
@@ -213,7 +207,7 @@ class TorchTrainer:
             loss, f1, accuracy
         """
 
-        n_batch = _get_n_batch_from_dataloader(test_dataloader)
+        #n_batch = _get_n_batch_from_dataloader(test_dataloader)
 
         running_loss = 0.0
         preds = []
@@ -221,14 +215,16 @@ class TorchTrainer:
         correct = 0
         total = 0
 
-        num_classes = _get_len_label_from_dataset(test_dataloader.dataset)
+        num_classes = 6 #_get_len_label_from_dataset(test_dataloader.dataset)
         label_list = [i for i in range(num_classes)]
 
         pbar = tqdm(enumerate(test_dataloader), total=len(test_dataloader))
         model.to(self.device)
         model.eval()
-        for batch, (data, labels) in pbar:
-            data, labels = data.to(self.device), labels.to(self.device)
+        for batch, inputs in enumerate(test_dataloader):
+            data, label = inputs[0]['image'].to(self.device),inputs[0]['label'].to(self.device)
+            data= data.permute(0,3,1,2).to(self.device)
+            labels = label.long().view(-1).to(self.device)
 
             if self.scaler:
                 with torch.cuda.amp.autocast():
@@ -255,8 +251,8 @@ class TorchTrainer:
         f1 = f1_score(
             y_true=gt, y_pred=preds, labels=label_list, average="macro", zero_division=0
         )
-        return loss, f1, accuracy
-
+        flops, _ = thop.profile(model, inputs=(torch.randn(1,3, 224,224).to(self.device),), verbose=False)
+        return loss, f1, accuracy, flops
 
 def count_model_params(
     model: torch.nn.Module,

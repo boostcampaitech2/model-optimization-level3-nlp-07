@@ -9,6 +9,6 @@
 *.ts
 *.pt
 **/password.py
-/*
-!code
-!.gitignore
+**/wandb
+*.jpg
+
