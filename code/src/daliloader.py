@@ -30,6 +30,7 @@ def dali_mixed_pipeline(ty):
         image_dir = "/opt/ml/data/test"
     jpegs, labels = fn.readers.file(name="Reader", file_root=image_dir, random_shuffle=True)
     images = fn.decoders.image(jpegs, device="mixed")
+    images = fn.flip(images, vertical=0, horizontal=1)
     images= fn.normalize(images.gpu(), mean=0, stddev=255)  # same as divide by 255
     images = fn.resize(images.gpu(), resize_x=224, resize_y=224)
     return images, labels.gpu()
