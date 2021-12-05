@@ -13,6 +13,7 @@ from src.modules.linear import Linear, LinearGenerator
 from src.modules.poolings import (AvgPoolGenerator, GlobalAvgPool,
                                   GlobalAvgPoolGenerator, MaxPoolGenerator)
 from src.modules.squeezenet import Fire, FireGenerator
+from src.modules.mbconv import MBConv, MBConvGenerator
 
 __all__ = [
     "ModuleGenerator",
