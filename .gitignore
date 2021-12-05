@@ -8,6 +8,7 @@
 **/fire
 *.ts
 *.pt
+**/password.py
 **/wandb
 *.jpg
 

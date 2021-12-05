@@ -177,6 +177,9 @@ if __name__ == "__main__":
             torch.load(args.weight, map_location=torch.device("cpu"))
         )
         model = model_instance.model
+    for param_tensor in model.state_dict():
+        print(param_tensor, "\t", model.state_dict()[param_tensor].size())
+
 
     # inference
     inference(model, dataloader, args.dst, t0)

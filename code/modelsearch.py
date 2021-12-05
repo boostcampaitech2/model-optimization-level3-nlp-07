@@ -36,36 +36,41 @@ MODULES=[
     "Dropout", #p
 ]
 
-def suggest_hp(module_name,out_channels,trial,s):
+def suggest_hp(module_name,in_features,trial,s,i):
+    if module_name!="Fire":
+        out_channels = int(in_features*trial.suggest_float("n_units_l{}".format(i), 1, 2)+4)//8*8
     stride=1
     if module_name=='Bottleneck':
-        return [out_channels],0
+        return [out_channels],0,out_channels
     elif module_name=='Conv':
         if s<5:
             stride=trial.suggest_int("stride", 1, 2)
-        return [out_channels,3,stride,None,1,trial.suggest_categorical("activation", ["ReLU", "HardSwish"])],stride==2
+        return [out_channels,3,stride,None,1,trial.suggest_categorical("activation", ["ReLU", "HardSwish"])],stride==2,out_channels
     elif module_name=='DWConv':
         if s<5:
             stride=trial.suggest_int("stride", 1, 2)
-        return [out_channels,3,stride,None,trial.suggest_categorical("activation", ["ReLU", "HardSwish"])],stride==2
+        return [out_channels,3,stride,None,trial.suggest_categorical("activation", ["ReLU", "HardSwish"])],stride==2,out_channels
     elif module_name=='InvertedResidualv2':
         if s<5:
             stride=trial.suggest_int("stride", 1, 2)
-        return [out_channels,trial.suggest_int("expansion", 1, 4),stride],stride==2
+        return [out_channels,trial.suggest_int("expansion", 1, 4),stride],stride==2,out_channels
     elif module_name=='InvertedResidualv3':
         if s<5:
             stride=trial.suggest_int("stride", 1, 2)
-        return [3,trial.suggest_int("expansion", 1, 4),out_channels,trial.suggest_categorical("se", [True, False]),trial.suggest_categorical("hardswish", [True, False]),stride],stride==2
+        return [3,trial.suggest_int("expansion", 1, 4),out_channels,trial.suggest_categorical("se", [True, False]),trial.suggest_categorical("hardswish", [True, False]),stride],stride==2,out_channels
     elif module_name=='FusedMBConv':
         if s<5:
             stride=trial.suggest_int("stride", 1, 2)
-        return [trial.suggest_int("expand_ratio", 1, 4),out_channels,stride,3],stride==2
+        return [trial.suggest_int("expand_ratio", 1, 4),out_channels,stride,3],stride==2,out_channels
     elif module_name=='MBConv':
         if s<5:
             stride=trial.suggest_int("stride", 1, 2)
-        return [trial.suggest_int("expand_ratio", 1, 4),out_channels,stride,3],stride==2
+        return [trial.suggest_int("expand_ratio", 1, 4),out_channels,stride,3],stride==2,out_channels
     elif module_name=='Dropout':
-        return [trial.suggest_uniform("p", 0, 0.7)],0
+        return [trial.suggest_uniform("p", 0, 0.7)],0,out_channels
+    elif module_name=='Fire':
+        fargs=[in_features//trial.suggest_int("squeeze_channels", 2, 4),trial.suggest_int("expand1x1_channels", 1, 32),trial.suggest_int("expand3x3_channels", 1, 32)]
+        return fargs,0,int(fargs[1]+fargs[2])
 
 def define_model(trial):
     n_layers = 6
@@ -76,8 +81,7 @@ def define_model(trial):
     for i in range(n_layers):
         repeats=trial.suggest_int("repeat_" + str(i), 1, 2)
         module=trial.suggest_int("module_" + str(i), 0, len(MODULES)-1)
-        out_features = int(in_features*trial.suggest_float("n_units_l{}".format(i), 1, 1.5)+4)//8*8
-        arg,sp=suggest_hp(MODULES[module],out_features,trial,s)
+        arg,sp,out_features=suggest_hp(MODULES[module],in_features,trial,s,i)
         s+=sp
         layers.append([repeats,MODULES[module],arg])
         in_features = out_features
@@ -88,6 +92,7 @@ def define_model(trial):
     return cfg
 
 def objective(trial):
+    torch.cuda.empty_cache()
     data_config =read_yaml(DIR)
     data_config['EPOCHS']=10
     model_config = define_model(trial)
@@ -109,6 +114,7 @@ def objective(trial):
         fp16=data_config["FP16"],
         device=DEVICE,
     )
+    torch.cuda.empty_cache()
     return flops, test_f1
 
 if __name__=="__main__":
