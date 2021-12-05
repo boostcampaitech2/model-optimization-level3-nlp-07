@@ -121,6 +121,8 @@
 
 디렉토리 : data
 
+(본 Repository에 data는 포함되어 있지 않습니다.)
+
 ## **Configs for data and model**
 
 디렉토리 : code/configs
