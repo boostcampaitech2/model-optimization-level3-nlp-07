@@ -100,9 +100,10 @@
 - 최종 프로젝트와 병행해서 진행됐기 때문에 효율적인 시간 분배를 위해 매일 아침 10시에 Stand-Up Meeting을 진행
 
 ### Final Score (Public)
-
-   `f1 score` : 0.6769  
-   `Inference time` : 57.0690   
+| Metric | Score |
+| --- | --- |
+| `f1 score` | 0.6769 |
+| `Inference time` | 57.0690 |
 
 
 
