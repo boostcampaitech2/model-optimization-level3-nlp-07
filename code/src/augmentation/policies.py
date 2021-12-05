@@ -20,7 +20,7 @@ DATASET_NORMALIZE_INFO = {
 
 
 def simple_augment_train(
-    dataset: str = "CIFAR10", img_size: float = 32
+    dataset: str = "CIFAR10", img_size: float = 224
 ) -> transforms.Compose:
     """Simple data augmentation rule for training CIFAR100."""
     return transforms.Compose(
@@ -31,6 +31,7 @@ def simple_augment_train(
                 size=img_size, ratio=(0.75, 1.0, 1.3333333333333333)
             ),
             transforms.RandomHorizontalFlip(),
+            transforms.RandomVerticalFlip(),
             transforms.ToTensor(),
             transforms.Normalize(
                 DATASET_NORMALIZE_INFO[dataset]["MEAN"],
@@ -41,7 +42,7 @@ def simple_augment_train(
 
 
 def simple_augment_test(
-    dataset: str = "CIFAR10", img_size: float = 32
+    dataset: str = "CIFAR10", img_size: float = 224
 ) -> transforms.Compose:
     """Simple data augmentation rule for testing CIFAR100."""
     return transforms.Compose(
@@ -59,9 +60,9 @@ def simple_augment_test(
 
 def randaugment_train(
     dataset: str = "CIFAR10",
-    img_size: float = 32,
+    img_size: float = 224,
     n_select: int = 2,
-    level: int = 8,
+    level: int = 5,
     n_level: int = 31,
 ) -> transforms.Compose:
     """Random augmentation policy for training CIFAR100."""
@@ -70,7 +71,7 @@ def randaugment_train(
         "AutoContrast",
         "Equalize",
         # "Rotate",
-        "Solarize",
+        # "Solarize",
         # "Color",
         "Posterize",
         # "Contrast",
