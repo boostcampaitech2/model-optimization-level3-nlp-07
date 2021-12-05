@@ -19,21 +19,21 @@ import json
 import os
 import sys
 import logging
+import yaml
 
-# EPOCH = 100
-EPOCH = 10
-N_TRIALS = 5
+EPOCH = 15
+N_TRIALS = 30
 # DATA_PATH = "/opt/ml/input/data"  # type your data path here that contains test, train and val directories
 DATA_PATH = "/opt/ml/data/"
-SAVE_PATH = "./tune_save"
-if not os.path.exists(SAVE_PATH):
-    os.mkdir(SAVE_PATH)
-RESULT_MODEL_PATH = os.path.join(SAVE_PATH, "/result_model.pt") # result model will be saved in this path
+# SAVE_PATH = "./exp/latest/"
+# if not os.path.exists(SAVE_PATH):
+#     os.mkdir(SAVE_PATH)
+RESULT_MODEL_PATH = "./best.pt" # result model will be saved in this path
 
 
 def search_hyperparam(trial: optuna.trial.Trial) -> Dict[str, Any]:
     """Search hyperparam from user-specified search space."""
-    epochs = trial.suggest_int("epochs", low=30, high=30, step=30)
+    epochs = trial.suggest_int("epochs", low=2, high=2, step=2)
     img_size = trial.suggest_categorical("img_size", [96, 112, 168, 224])
     n_select = trial.suggest_int("n_select", low=0, high=6, step=2)
     batch_size = trial.suggest_int("batch_size", low=64, high=64, step=64)
@@ -71,7 +71,7 @@ def search_model(trial: optuna.trial.Trial) -> List[Any]:
 
     # Module 2
     m2 = trial.suggest_categorical(
-        "m2", ["Conv", "DWConv", "InvertedResidualv2", "InvertedResidualv3"]
+        "m2", ["Conv", "DWConv", "InvertedResidualv2", "InvertedResidualv3", "Pass"]
     )
     # m2 = "InvertedResidualv3"
     m2_args = []
@@ -116,7 +116,7 @@ def search_model(trial: optuna.trial.Trial) -> List[Any]:
 
     # Module 3
     m3 = trial.suggest_categorical(
-        "m3", ["Conv", "DWConv", "InvertedResidualv2", "InvertedResidualv3"]
+        "m3", ["Conv", "DWConv", "InvertedResidualv2", "InvertedResidualv3", "Pass"]
     )
     # m3 = "InvertedResidualv3"
     m3_args = []
@@ -423,11 +423,10 @@ def objective(trial: optuna.trial.Trial, device) -> Tuple[float, int, float]:
         "width_multiple", [0.25, 0.5, 0.75, 1.0]
     )
     model_config["backbone"], module_info = search_model(trial)
-    try:
-        with open("./module_info.json", "a") as f:
-            json.dump(module_info, f)
-    except:
-        pass
+    
+    with open("./model.yml", "w") as f:
+        yaml.dump(model_config, f, default_flow_style=False)
+    
     hyperparams = search_hyperparam(trial)
 
     model = Model(model_config, verbose=True)
@@ -438,10 +437,10 @@ def objective(trial: optuna.trial.Trial, device) -> Tuple[float, int, float]:
     data_config: Dict[str, Any] = {}
     data_config["DATA_PATH"] = DATA_PATH
     data_config["DATASET"] = "TACO"
-    data_config["AUG_TRAIN"] = "randaugment_train"
-    data_config["AUG_TEST"] = "simple_augment_test"
+    data_config["AUG_TRAIN"] = "simple_augment_train"
+    data_config["AUG_TEST"] = "simple_augment_test" 
     data_config["AUG_TRAIN_PARAMS"] = {
-        "n_select": hyperparams["n_select"],
+        # "n_select": hyperparams["n_select"],
     }
     data_config["AUG_TEST_PARAMS"] = None
     data_config["BATCH_SIZE"] = hyperparams["BATCH_SIZE"]
@@ -453,19 +452,24 @@ def objective(trial: optuna.trial.Trial, device) -> Tuple[float, int, float]:
         [model_config["input_channel"]] + model_config["INPUT_SIZE"],
         device,
     )
+    try:
+        with open("./data.yaml", "w") as f:
+            yaml.dump(data_config, f, "./data.yaml")
+    except:
+        pass
+
     model_info(model, verbose=True)
     train_loader, val_loader, test_loader = create_dataloader(data_config)
 
     criterion = nn.CrossEntropyLoss()
-    optimizer = torch.optim.SGD(model.parameters(), lr=0.1, momentum=0.9)
-    # optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
+    # optimizer = torch.optim.SGD(model.parameters(), lr=0.1, momentum=0.9)
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
     scheduler = torch.optim.lr_scheduler.OneCycleLR(
         optimizer,
-        max_lr=0.1,
+        max_lr=0.01,
         steps_per_epoch=len(train_loader),
         epochs=hyperparams["EPOCHS"],
-        pct_start=0.1,
-        verbose=True
+        pct_start=0.05,
     )
     # scheduler = torch.optim.lr_scheduler.LamdaLR(
     #     optimizer=optimizer,
@@ -505,7 +509,7 @@ def get_best_trial_with_condition(optuna_study: optuna.study.Study) -> Dict[str,
         }
     )
     ## minimum condition : accuracy >= threshold
-    threshold = 0.5
+    threshold = 0.4
     # threshold = 0.7
     minimum_cond = df.acc_percent >= threshold
 
