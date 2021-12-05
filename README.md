@@ -27,7 +27,7 @@
 ### 🔅 Contribution
 `김보성` `DALI` , `Neural Architecture Search` , `Parameter Reduction`
 
-`김지후` `Pruning` `Quantization` `fine-tuning`
+`김지후` `Pruning`, `Quantization`, `fine-tuning`
 
 `김혜수` `Neural Architecture Search`, `Stratified Subsampling`
 
