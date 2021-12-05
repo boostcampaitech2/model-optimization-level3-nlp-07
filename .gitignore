@@ -8,5 +8,6 @@
 **/fire
 *.ts
 *.pt
+**/wandb
 *.jpg
-!.gitignore
+

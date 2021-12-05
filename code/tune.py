@@ -2,6 +2,8 @@
 - Author: Junghoon Kim, Jongsun Shin
 - Contact: placidus36@gmail.com, shinn1897@makinarocks.ai
 """
+import os
+from datetime import datetime
 import optuna
 import torch
 import torch.nn as nn
@@ -31,12 +33,14 @@ DATA_PATH = "/opt/ml/data/"
 RESULT_MODEL_PATH = "./best.pt" # result model will be saved in this path
 
 
+
 def search_hyperparam(trial: optuna.trial.Trial) -> Dict[str, Any]:
     """Search hyperparam from user-specified search space."""
+
     epochs = trial.suggest_int("epochs", low=2, high=2, step=2)
     img_size = trial.suggest_categorical("img_size", [96, 112, 168, 224])
     n_select = trial.suggest_int("n_select", low=0, high=6, step=2)
-    batch_size = trial.suggest_int("batch_size", low=64, high=64, step=64)
+    batch_size = trial.suggest_categorical("batch_size", [64, 128, 256])
     return {
         "EPOCHS": epochs,
         "IMG_SIZE": img_size,
@@ -73,7 +77,6 @@ def search_model(trial: optuna.trial.Trial) -> List[Any]:
     m2 = trial.suggest_categorical(
         "m2", ["Conv", "DWConv", "InvertedResidualv2", "InvertedResidualv3", "Pass"]
     )
-    # m2 = "InvertedResidualv3"
     m2_args = []
     m2_repeat = trial.suggest_int("m2/repeat", 1, 5)
     m2_out_channel = trial.suggest_int("m2/out_channels", low=16, high=128, step=16)
@@ -118,7 +121,6 @@ def search_model(trial: optuna.trial.Trial) -> List[Any]:
     m3 = trial.suggest_categorical(
         "m3", ["Conv", "DWConv", "InvertedResidualv2", "InvertedResidualv3", "Pass"]
     )
-    # m3 = "InvertedResidualv3"
     m3_args = []
     m3_repeat = trial.suggest_int("m3/repeat", 1, 5)
     m3_stride = trial.suggest_int("m3/stride", low=1, high=UPPER_STRIDE)
@@ -396,7 +398,6 @@ def search_model(trial: optuna.trial.Trial) -> List[Any]:
     module_info["m5"] = {"type": m5, "repeat": m5_repeat, "stride": m5_stride}
     module_info["m6"] = {"type": m6, "repeat": m6_repeat, "stride": m6_stride}
     module_info["m7"] = {"type": m7, "repeat": m7_repeat, "stride": m7_stride}
-
     module_info["m8"] = {"type": m8, "repeat": m8_repeat, "stride": m8_stride}
 
     return model, module_info
@@ -413,7 +414,6 @@ def objective(trial: optuna.trial.Trial, device) -> Tuple[float, int, float]:
     model_config: Dict[str, Any] = {}
     model_config["input_channel"] = 3
     # img_size = trial.suggest_categorical("img_size", [32, 64, 128])
-    # img_size = 32
     img_size = 224
     model_config["INPUT_SIZE"] = [img_size, img_size]
     model_config["depth_multiple"] = trial.suggest_categorical(
@@ -423,10 +423,12 @@ def objective(trial: optuna.trial.Trial, device) -> Tuple[float, int, float]:
         "width_multiple", [0.25, 0.5, 0.75, 1.0]
     )
     model_config["backbone"], module_info = search_model(trial)
+
     
     with open("./model.yml", "w") as f:
         yaml.dump(model_config, f, default_flow_style=False)
     
+
     hyperparams = search_hyperparam(trial)
 
     model = Model(model_config, verbose=True)
@@ -459,11 +461,13 @@ def objective(trial: optuna.trial.Trial, device) -> Tuple[float, int, float]:
         pass
 
     model_info(model, verbose=True)
-    train_loader, val_loader, test_loader = create_dataloader(data_config)
+    train_loader, val_loader, test_loader = create_dataloader(data_config, subset_size=0.4)
 
     criterion = nn.CrossEntropyLoss()
+
     # optimizer = torch.optim.SGD(model.parameters(), lr=0.1, momentum=0.9)
     optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
+
     scheduler = torch.optim.lr_scheduler.OneCycleLR(
         optimizer,
         max_lr=0.01,
@@ -471,11 +475,6 @@ def objective(trial: optuna.trial.Trial, device) -> Tuple[float, int, float]:
         epochs=hyperparams["EPOCHS"],
         pct_start=0.05,
     )
-    # scheduler = torch.optim.lr_scheduler.LamdaLR(
-    #     optimizer=optimizer,
-    #     lr_lambda=lambda epoch: 0.8 ** epoch,
-    #     verbose=True
-    # )
 
     trainer = TorchTrainer(
         model,
@@ -487,11 +486,34 @@ def objective(trial: optuna.trial.Trial, device) -> Tuple[float, int, float]:
         model_path=RESULT_MODEL_PATH,
     )
     trainer.train(train_loader, hyperparams["EPOCHS"], val_dataloader=val_loader)
-    loss, f1_score, acc_percent = trainer.test(model, test_dataloader=val_loader)
+    loss, f1_score, acc_percent, flops = trainer.test(model, test_dataloader=val_loader)
     params_nums = count_model_params(model)
 
     model_info(model, verbose=True)
-    return f1_score, params_nums, mean_time
+
+    log_dir = os.environ.get(os.path.join("modelsearch", f'optuna_{f1_score:.3f}'))
+
+    if os.path.exists(log_dir): 
+        modified = datetime.now()
+        new_log_dir = os.path.dirname(log_dir) + '/' + modified.strftime(f"%y-%m-%d_%H-%M-%S_{f1_score:.3f}")
+        os.rename(log_dir, new_log_dir)
+
+    os.makedirs(log_dir, exist_ok=True)
+    
+    # save model_config, data_config
+    metric: Dict[float, Any] = {}
+    metric["f1"] = float(f1_score)
+    metric["acc"] = acc_percent
+    metric["flops"] = flops
+
+    with open(os.path.join(log_dir, "data.yml"), "w") as f:
+        yaml.dump(data_config, f, default_flow_style=False)
+    with open(os.path.join(log_dir, "model.yml"), "w") as f:
+        yaml.dump(model_config, f, default_flow_style=False)
+    with open(os.path.join(log_dir, "metric.yml"), "w") as f:
+        yaml.dump(metric, f, default_flow_style=False)
+
+    return f1_score, flops, params_nums, mean_time,
 
 
 def get_best_trial_with_condition(optuna_study: optuna.study.Study) -> Dict[str, Any]:
@@ -504,19 +526,15 @@ def get_best_trial_with_condition(optuna_study: optuna.study.Study) -> Dict[str,
     df = optuna_study.trials_dataframe().rename(
         columns={
             "values_0": "acc_percent",
-            "values_1": "params_nums",
-            "values_2": "mean_time",
+            "values_1": "flops",
+            "values_2": "params_nums",
+            "values_3": "mean_time",
         }
     )
     ## minimum condition : accuracy >= threshold
     threshold = 0.4
     # threshold = 0.7
     minimum_cond = df.acc_percent >= threshold
-
-    try:
-        df.to_csv("./exp.csv", index=False)
-    except:
-        pass
 
     if minimum_cond.any():
         df_min_cond = df.loc[minimum_cond]
@@ -545,15 +563,15 @@ def tune(gpu_id, storage: str = None):
         rdb_storage = optuna.storages.RDBStorage(url=storage)
     else:
         rdb_storage = None
+
     study = optuna.create_study(
-        directions=["maximize", "minimize", "minimize"],
+        directions=["maximize", "minimize", "minimize", "minimize"],
         study_name="automl101",
         sampler=sampler,
         storage=rdb_storage,
         load_if_exists=True,
     )
-    # study.optimize(lambda trial: objective(trial, device), n_trials=500)
-    study.optimize(lambda trial: objective(trial, device), n_trials=N_TRIALS)
+    study.optimize(lambda trial: objective(trial, device), n_trials=10)
 
     pruned_trials = [
         t for t in study.trials if t.state == optuna.trial.TrialState.PRUNED
