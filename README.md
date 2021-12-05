@@ -102,9 +102,9 @@
 ### 최종 결과
 
 <aside>
-💡 최종 Public Score는 
-   `f1 score` 0.6769
-   `Inference time` 57.0690 
+💡 최종 Public Score는   
+   `f1 score` : 0.6769  
+   `Inference time` : 57.0690   
    을 달성하였습니다.
 
 </aside>
