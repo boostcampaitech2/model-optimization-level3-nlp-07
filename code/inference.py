@@ -14,7 +14,7 @@ from torch.utils.data import DataLoader
 from torchvision.datasets import ImageFolder
 from torchvision.transforms import Resize
 from tqdm import tqdm
-
+from src.daliloader import create_dali_dl
 from src.augmentation.policies import simple_augment_test
 from src.model import Model
 from src.utils.common import read_yaml
@@ -64,6 +64,7 @@ def get_dataloader(img_root: str, data_config: str) -> DataLoader:
 
     dataset = CustomImageFolder(root=img_root, transform=transform_test)
     dataloader = DataLoader(dataset=dataset, batch_size=1, num_workers=8)
+    dataloader = create_dali_dl("test")
     return dataloader
 
 
