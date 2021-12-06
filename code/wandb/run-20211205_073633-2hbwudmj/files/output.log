@@ -1,0 +1,67 @@
+
+  0%|                                                                                                                                                         | 0/244 [00:00<?, ?it/s]/opt/conda/envs/lightweight/lib/python3.7/site-packages/torch/optim/lr_scheduler.py:123: UserWarning: Detected call of `lr_scheduler.step()` before `optimizer.step()`. In PyTorch 1.1.0 and later, you should call them in the opposite order: `optimizer.step()` before `lr_scheduler.step()`.  Failure to do this will result in PyTorch skipping the first value of the learning rate schedule. See more details at https://pytorch.org/docs/stable/optim.html#how-to-adjust-learning-rate
+  "https://pytorch.org/docs/stable/optim.html#how-to-adjust-learning-rate", UserWarning)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Train: [001] Loss: 1.807, Acc: 33.64% F1(macro): 0.20: 100%|████████████████████████████████████████████████████████████████████████████████████████| 244/244 [00:54<00:00,  4.50it/s]
+
+
+
+
+
+
+
+
+
+
+
+
+ Val:       Loss: 105.796, Acc: 12.32% F1(macro): 0.07: : 94it [00:26,  2.54it/s]
+ Val:       Loss: 110.344, Acc: 12.11% F1(macro): 0.07: 100%|█████████████████████████████████████████████████████████████████████████████████████████| 82/82 [00:27<00:00,  2.96it/s]
+
+Train: [002] Loss: 2.067, Acc: 37.34% F1(macro): 0.15:   4%|███▋                                                                                     | 10/244 [00:03<01:27,  2.68it/s]
+Traceback (most recent call last):
+  File "train.py", line 197, in <module>
+    device=device,
+  File "train.py", line 120, in train
+    val_dataloader=val_dl ,
+  File "/opt/ml/data/repos/model-optimization-level3-nlp-07/code/src/torch_trainer.py", line 129, in train
+    for batch, (data, labels) in pbar:
+  File "/opt/conda/envs/lightweight/lib/python3.7/site-packages/tqdm/std.py", line 1180, in __iter__
+    for obj in iterable:
+  File "/opt/conda/envs/lightweight/lib/python3.7/site-packages/torch/utils/data/dataloader.py", line 363, in __next__
+    data = self._next_data()
+  File "/opt/conda/envs/lightweight/lib/python3.7/site-packages/torch/utils/data/dataloader.py", line 974, in _next_data
+    idx, data = self._get_data()
+  File "/opt/conda/envs/lightweight/lib/python3.7/site-packages/torch/utils/data/dataloader.py", line 931, in _get_data
+    success, data = self._try_get_data()
+  File "/opt/conda/envs/lightweight/lib/python3.7/site-packages/torch/utils/data/dataloader.py", line 779, in _try_get_data
+    data = self._data_queue.get(timeout=timeout)
+  File "/opt/conda/envs/lightweight/lib/python3.7/queue.py", line 179, in get
+    self.not_empty.wait(remaining)
+  File "/opt/conda/envs/lightweight/lib/python3.7/threading.py", line 300, in wait
+    gotit = waiter.acquire(True, timeout)
+KeyboardInterrupt
