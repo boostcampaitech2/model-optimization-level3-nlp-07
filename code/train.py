@@ -81,8 +81,13 @@ def train(
     
 
     # Create optimizer, scheduler, criterion
-    optimizer = torch.optim.SGD(
-        model_instance.model.parameters(), lr=data_config["INIT_LR"], momentum=0.9
+
+    # optimizer = torch.optim.SGD(
+    #     model_instance.model.parameters(), lr=data_config["INIT_LR"], momentum=0.9
+    # )
+    optimizer = torch.optim.Adam(
+        model_instance.model.parameters(), lr=data_config["INIT_LR"]
+
     )
     scheduler = torch.optim.lr_scheduler.OneCycleLR(
         optimizer=optimizer,
@@ -91,6 +96,16 @@ def train(
         epochs=data_config["EPOCHS"],
         pct_start=0.05,
     )
+    # scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
+    #     optimizer=optimizer,
+    #     T_max=10,
+    #     eta_min=1e-5
+    # )
+    # scheduler = torch.optim.lr_scheduler.LambdaLR(
+    #     optimizer=optimizer,
+    #     lr_lambda=lambda epoch : 0.95**epoch
+    #     # verbose=True
+    # )
     criterion = CustomCriterion(
         samples_per_cls=get_label_counts(data_config["DATA_PATH"])
         if data_config["DATASET"] == "TACO"
@@ -123,6 +138,7 @@ def train(
         )
 
     # evaluate model with test set
+
         model_instance.model.load_state_dict(torch.load(model_path))
         test_loss, test_f1, test_acc = trainer.test(
             model=model_instance.model, test_dataloader=val_dl 
@@ -154,6 +170,7 @@ def train(
     return test_loss, test_f1, test_acc
 
 
+
 if __name__ == "__main__":
     
     torch.cuda.empty_cache()
@@ -182,10 +199,12 @@ if __name__ == "__main__":
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     log_dir = os.environ.get("SM_MODEL_DIR", os.path.join("exp", 'latest'))
 
+
     if os.path.isfile(log_dir+'/best.pt'): 
         modified = datetime.fromtimestamp(os.path.getmtime(log_dir + '/best.pt'))
         new_log_dir = os.path.dirname(log_dir) + '/' + modified.strftime("%Y-%m-%d_%H-%M-%S")
         os.rename(log_dir, new_log_dir)
+
 
     os.makedirs(log_dir, exist_ok=True)
     

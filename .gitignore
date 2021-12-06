@@ -8,4 +8,7 @@
 **/fire
 *.ts
 *.pt
-!.gitignore
+**/password.py
+**/wandb
+*.jpg
+

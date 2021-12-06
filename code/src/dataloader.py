@@ -9,6 +9,9 @@ import glob
 import os
 from typing import Any, Dict, List, Tuple, Union
 
+import numpy as np
+from sklearn.model_selection import train_test_split
+
 import torch
 import yaml
 from torch.utils.data import DataLoader, random_split
@@ -20,6 +23,7 @@ from src.utils.torch_utils import split_dataset_index
 
 def create_dataloader(
     config: Dict[str, Any],
+    subset_size: float = 1,
 ) -> Tuple[DataLoader, DataLoader, DataLoader]:
     """Simple dataloader.
 
@@ -43,6 +47,10 @@ def create_dataloader(
         transform_test_params=config.get("AUG_TEST_PARAMS"),
     )
 
+    # Get Subset
+    if subset_size < 1:
+        train_dataset = get_dataset_subset(train_dataset, subset_size)
+
     return get_dataloader(
         train_dataset=train_dataset,
         val_dataset=val_dataset,
@@ -55,7 +63,7 @@ def get_dataset(
     data_path: str = "./save/data",
     dataset_name: str = "CIFAR10",
     img_size: float = 32,
-    val_ratio: float=0.2,
+    val_ratio: float = 0.2,
     transform_train: str = "simple_augment_train",
     transform_test: str = "simple_augment_test",
     transform_train_params: Dict[str, int] = None,
@@ -104,6 +112,24 @@ def get_dataset(
             root=data_path, train=False, download=False, transform=transform_test
         )
     return train_dataset, val_dataset, test_dataset
+
+
+def get_dataset_subset(
+    dataset: VisionDataset,
+    subset_size: float = 0.5,
+    ) -> Subset:
+    """Get stratified subset of original dataset considering label distribution"""
+
+    targets = dataset.targets
+    using_idx, _unusing_idx = train_test_split(
+        np.arange(len(targets)),
+        test_size=1-subset_size,
+        shuffle=True,
+        stratify=targets)
+
+    dataset_subset = torch.utils.data.Subset(dataset, using_idx)
+
+    return dataset_subset
 
 
 def get_dataloader(
